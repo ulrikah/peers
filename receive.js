@@ -1,21 +1,36 @@
-var Peer = require("simple-peer");
-var wrtc = require("wrtc");
+const ws = require("ws");
+const Peer = require("simple-peer");
+const wrtc = require("wrtc");
+const speedometer = require("speedometer");
+const prettierBytes = require("prettier-bytes");
 
-var receiver = new Peer({ wrtc: wrtc });
+var peer;
 
-receiver.on("signal", (data) => {
-    console.log("SIGNAL", JSON.stringify(data));
-});
+var speed = speedometer();
 
-receiver.on("connect", () => {
-    // wait for 'connect' event before using the data channel
-    receiver.send("hey senderr, how is it going?");
-});
+var socket = new ws("ws://localhost:8080");
 
-receiver.on("data", (data) => {
-    console.log("[DATA]", JSON.stringify(data));
-});
+socket.addEventListener("message", onMessage);
 
-receiver.on("error", (err) => {
-    console.log("[ERROR]", err);
-});
+function onMessage(event) {
+    var message = event.data;
+    if (message.includes("ready")) {
+        if (peer) return;
+        peer = new Peer({
+            initiator: message.includes("initiator") ? true : false,
+            wrtc: wrtc,
+        });
+        peer.on("signal", function (signal) {
+            socket.send(JSON.stringify(signal));
+        });
+        peer.on("data", function (message) {
+            speed(message.length);
+        });
+    } else {
+        peer.signal(JSON.parse(message));
+    }
+}
+
+setInterval(function () {
+    console.log(prettierBytes(speed()));
+}, 1000);

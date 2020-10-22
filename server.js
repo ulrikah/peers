@@ -6,8 +6,17 @@ const server = new ws.Server({
 
 const sockets = [];
 
-server.on("connection", function (socket) {
+server.on("connection", (socket) => {
     sockets.push(socket);
+    socket.on("message", (msg) => {
+        console.log("[server]", "received a message", "\n", msg);
+        sockets
+            .filter((s) => s !== socket)
+            .forEach((socket) => socket.send(msg));
+    });
+    socket.on("close", () => {
+        sockets.splice(sockets.indexOf(socket), 1);
+    });
 
     console.log("received socket connection");
     console.log("current socket count", sockets.length);
@@ -15,9 +24,7 @@ server.on("connection", function (socket) {
     // time to connect the two peers :~)
     if (sockets.length === 2) {
         sockets.forEach((socket, idx) =>
-            socket.send(
-                `you should connect to the other peer ${Math.abs(1 - idx)}`
-            )
+            socket.send(`ready ${idx === 0 ? "initiator" : ""}`)
         );
     }
 });
