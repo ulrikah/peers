@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "scripts": {
         "server": "nodemon server.js",
-        "peer": "nodemon --exec 'sleep 1 && node peer.js'"
+        "send": "nodemon --exec 'sleep 1 && node send.js'",
+        "receive": "nodemon --exec 'sleep 1 && node receive.js'"
     },
     "license": "ISC",
     "dependencies": {
