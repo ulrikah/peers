@@ -3,28 +3,36 @@ const Peer = require("simple-peer");
 const wrtc = require("wrtc");
 const speedometer = require("speedometer");
 const prettierBytes = require("prettier-bytes");
+const log = require("./log");
 
-var peer;
+let peer;
 
-var speed = speedometer();
+const speed = speedometer();
 
-var socket = new ws("ws://localhost:8080");
+const socket = new ws("ws://localhost:8080");
 
 socket.addEventListener("message", onMessage);
 
 function onMessage(event) {
-    var message = event.data;
+    const message = event.data;
     if (message.includes("ready")) {
         if (peer) return;
         peer = new Peer({
             initiator: message.includes("initiator") ? true : false,
             wrtc: wrtc,
         });
-        peer.on("signal", function (signal) {
+        peer.on("signal", (signal) => {
             socket.send(JSON.stringify(signal));
         });
-        peer.on("data", function (message) {
-            speed(message.length);
+        peer.on("data", (msg) => {
+            if (msg && msg.toString() && msg.toString().startsWith("[text]")) {
+                log(msg.toString());
+            }
+            speed(msg.length);
+        });
+        peer.on("connect", () => {
+            console.log("CONNECTED");
+            peer.send("[text] hi this is receiver");
         });
     } else {
         peer.signal(JSON.parse(message));

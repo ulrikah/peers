@@ -16,10 +16,11 @@ server.on("connection", (socket) => {
     });
     socket.on("close", () => {
         sockets.splice(sockets.indexOf(socket), 1);
+        console.log("socket connection closed");
+        console.log("current socket count", sockets.length);
     });
 
     console.log("received socket connection");
-    console.log("current socket count", sockets.length);
 
     // time to connect the two peers :~)
     if (sockets.length === 2) {

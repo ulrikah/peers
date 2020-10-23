@@ -4,7 +4,7 @@
     "scripts": {
         "server": "nodemon server.js",
         "send": "nodemon --exec 'sleep 1 && node send.js'",
-        "receive": "nodemon --exec 'sleep 1 && node receive.js'"
+        "receive": "nodemon --exec 'sleep 2 && node receive.js'"
     },
     "license": "ISC",
     "dependencies": {

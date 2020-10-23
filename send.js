@@ -1,24 +1,25 @@
 const ws = require("ws");
 const Peer = require("simple-peer");
 const wrtc = require("wrtc");
-var stream = require("readable-stream");
+const stream = require("stream");
+const log = require("./log");
 
-var buf = Buffer.alloc(10000);
+const buf = Buffer.alloc(10000);
 
-var endless = new stream.Readable({
+const endless = new stream.Readable({
     read: function () {
         this.push(buf);
     },
 });
 
-var peer;
+let peer;
 
-var socket = new ws("ws://localhost:8080");
+const socket = new ws("ws://localhost:8080");
 
 socket.addEventListener("message", onMessage);
 
 function onMessage(event) {
-    var message = event.data;
+    const message = event.data;
     if (message.includes("ready")) {
         if (peer) return;
         peer = new Peer({ initiator: true, wrtc: wrtc });
@@ -27,6 +28,12 @@ function onMessage(event) {
         });
         peer.on("connect", function () {
             endless.pipe(peer);
+        });
+        peer.on("data", (msg) => {
+            if (msg && msg.toString() && msg.toString().startsWith("[text]")) {
+                log(msg.toString());
+                peer.send("[text] hi this is sender");
+            }
         });
     } else {
         peer.signal(JSON.parse(message));
