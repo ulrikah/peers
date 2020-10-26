@@ -1,7 +1,7 @@
 const ws = require("ws");
 
 const server = new ws.Server({
-    port: 8080,
+    port: 1234,
 });
 
 const sockets = [];

@@ -1,10 +1,11 @@
 import "./style.css";
 import Peer from "simple-peer";
 
-const WS_URL = "ws://localhost:8080";
+const WS_URL = "ws://localhost:1234";
 
 let socket: WebSocket;
 let peer: Peer.Instance;
+let video = document.createElement("video");
 let logger = document.createElement("p");
 let button = document.createElement("button");
 button.innerText = "PING";
@@ -18,6 +19,7 @@ const component = () => {
 
     element.appendChild(heading);
     element.appendChild(button);
+    element.appendChild(video);
     element.appendChild(logger);
 
     return element;
@@ -29,36 +31,54 @@ const onMessage = (event: MessageEvent) => {
     const message = event.data;
     logger.textContent = message;
     if (message.includes("ready")) {
-        if (peer) return;
-        peer = new Peer({
-            initiator: message.includes("initiator") ? true : false,
-        });
-        peer.on("signal", (signal) => {
-            socket.send(JSON.stringify(signal));
-        });
-        peer.on("data", (msg) => {
-            if (msg && msg.toString()) {
-                if (msg.toString().startsWith("[text]")) {
-                    console.log(msg.toString());
-                }
-                if (msg.toString().startsWith("[ping]")) {
-                    peer.send("[pong]");
-                    console.log(msg.toString());
-                }
-                if (msg.toString().startsWith("[pong]")) {
-                    peer.send("[ping]");
-                    console.log(msg.toString());
-                }
-            }
-        });
-        peer.on("connect", () => {
-            console.log("CONNECTED");
-            button.addEventListener("click", () => {
-                console.log("PINGING");
-                peer.send("[ping]");
+        // get video/voice stream
+        navigator.mediaDevices
+            .getUserMedia({
+                video: true,
+                audio: true,
+            })
+            .then((stream: MediaStream) => {
+                if (peer) return;
+                peer = new Peer({
+                    initiator: message.includes("initiator") ? true : false,
+                    stream: stream,
+                });
+
+                const video = document.querySelector("video");
+                video.srcObject = stream;
+
+                video.play();
+
+                peer.on("signal", (signal) => {
+                    socket.send(JSON.stringify(signal));
+                });
+                peer.on("data", (msg) => {
+                    if (msg && msg.toString()) {
+                        if (msg.toString().startsWith("[text]")) {
+                            console.log(msg.toString());
+                        }
+                        if (msg.toString().startsWith("[ping]")) {
+                            peer.send("[pong]");
+                            console.log(msg.toString());
+                        }
+                        if (msg.toString().startsWith("[pong]")) {
+                            peer.send("[ping]");
+                            console.log(msg.toString());
+                        }
+                    }
+                });
+                peer.on("connect", () => {
+                    console.log("CONNECTED");
+                    button.addEventListener("click", () => {
+                        console.log("PINGING");
+                        peer.send("[ping]");
+                    });
+                    peer.send("[text] hi this is receiver");
+                });
+            })
+            .catch((error) => {
+                console.log("Error fetching media stream");
             });
-            peer.send("[text] hi this is receiver");
-        });
     } else {
         peer.signal(JSON.parse(message));
     }
