@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans&display=swap");
+
+body {
+    margin: 5%;
+    padding: 0;
+    background-color: #ebe7ff;
+}
+
+h1 {
+    font-family: "VT323", monospace;
+    font-size: 8rem;
+}
+
+p {
+    font-family: "Open Sans", sans-serif;
+}
