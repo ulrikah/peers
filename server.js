@@ -1,7 +1,7 @@
 const ws = require("ws");
 
 const server = new ws.Server({
-    port: 8080,
+    port: 1234,
 });
 
 const sockets = [];
@@ -21,6 +21,7 @@ server.on("connection", (socket) => {
     });
 
     console.log("received socket connection");
+    console.log("current socket count", sockets.length);
 
     // time to connect the two peers :~)
     if (sockets.length === 2) {
