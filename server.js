@@ -1,4 +1,9 @@
 const ws = require("ws");
+const publicIp = require("public-ip");
+
+publicIp.v4().then((ip) => {
+    console.log("Public IP adress", ip);
+});
 
 const server = new ws.Server({
     port: 1234,

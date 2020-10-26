@@ -6,6 +6,7 @@ const WS_URL = "ws://localhost:1234";
 let socket: WebSocket;
 let peer: Peer.Instance;
 let video = document.createElement("video");
+video.controls = true;
 let logger = document.createElement("p");
 let button = document.createElement("button");
 button.innerText = "PING";
@@ -18,8 +19,8 @@ const component = () => {
     heading.textContent = `${isInitiator ? "INITIATOR 🌀" : "RECEIVER 🐚"}`;
 
     element.appendChild(heading);
-    element.appendChild(button);
     element.appendChild(video);
+    element.appendChild(button);
     element.appendChild(logger);
 
     return element;
