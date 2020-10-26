@@ -1,0 +1,107 @@
+<html>
+    <body>
+        <style>
+            #outgoing {
+                width: 600px;
+                word-wrap: break-word;
+                white-space: normal;
+            }
+        </style>
+        <form>
+            <textarea id="incoming"></textarea>
+            <button type="submit">submit</button>
+        </form>
+        <audio id="peer1" controls width="250">
+            Sorry, your browser doesn't support embedded audio.
+        </audio>
+
+        <audio id="peer2" controls width="250">
+            Sorry, your browser doesn't support embedded audio.
+        </audio>
+        <pre id="outgoing"></pre>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.7.2/simplepeer.min.js"></script>
+        <script>
+            // get video/voice stream
+            navigator.mediaDevices
+                .getUserMedia({
+                    video: true,
+                    audio: true,
+                })
+                .then(gotMedia)
+                .catch((error) => {
+                    console.error(
+                        "[ERROR] Failed to fetch mediaDevices",
+                        error
+                    );
+                });
+
+            function gotMedia(stream) {
+                var peer1 = new SimplePeer({ initiator: true, stream: stream });
+                var peer2 = new SimplePeer({ stream: stream });
+
+                peer1.on("signal", (data) => {
+                    peer2.signal(data);
+                });
+
+                peer2.on("signal", (data) => {
+                    peer1.signal(data);
+                });
+
+                peer2.on("stream", (stream) => {
+                    // got remote video stream, now let's show it in a video tag
+                    var audio = document.querySelector("#peer1");
+
+                    if ("srcObject" in audio) {
+                        audio.srcObject = stream;
+                        audio.playbackRate = 2.0;
+                    } else {
+                        audio.src = window.URL.createObjectURL(stream); // for older browsers
+                    }
+
+                    audio.play();
+                });
+
+                peer1.on("stream", (stream) => {
+                    // got remote video stream, now let's show it in a video tag
+                    var audioCtx = new (window.AudioContext ||
+                        window.webkitAudioContext)();
+
+                    var audio = document.querySelector("#peer2");
+
+                    //create an audio node from the stream
+                    var streamNode = audioCtx.createMediaStreamSource(stream);
+                    var delayNode = audioCtx.createDelay(100);
+                    var feedbackNode = audioCtx.createGain();
+                    var bypassNode = audioCtx.createGain();
+                    var masterNode = audioCtx.createGain();
+                    var destination = audioCtx.createMediaStreamDestination();
+
+                    //controls
+                    delayNode.delayTime.value = 1;
+                    feedbackNode.gain.value = 0.6;
+                    bypassNode.gain.value = 1;
+
+                    //wire up nodes
+                    streamNode.connect(delayNode);
+                    delayNode.connect(feedbackNode);
+                    feedbackNode.connect(delayNode);
+
+                    delayNode.connect(bypassNode);
+                    bypassNode.connect(masterNode);
+                    streamNode.connect(masterNode);
+
+                    masterNode.connect(destination);
+
+                    if ("srcObject" in audio) {
+                        audio.srcObject = destination.stream;
+                        audio.playbackRate = 0.5;
+                    } else {
+                        audio.src = window.URL.createObjectURL(stream); // for older browsers
+                    }
+
+                    audio.play();
+                });
+            }
+        </script>
+    </body>
+</html>
