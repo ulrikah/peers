@@ -1,8 +1,13 @@
 import "./style.css";
 import Peer = require("simple-peer");
 
-const WS_URL = `wss://${location.hostname}:${location.port}`;
-// const WS_URL = `ws://${location.hostname}:1234`;
+let WS_URI: string;
+if (location.protocol === "https:") {
+    WS_URI = `wss://${location.hostname}:${location.port}`;
+} else {
+    WS_URI = `ws://${location.hostname}:${location.port}`;
+}
+console.log("Attempting to get web socket server at", WS_URI);
 
 let socket: WebSocket;
 let peer: Peer.Instance;
@@ -46,11 +51,6 @@ const onMessage = (event: MessageEvent) => {
                     stream: stream,
                 });
 
-                const video = document.querySelector("video");
-                video.srcObject = stream;
-
-                video.play();
-
                 peer.on("signal", (signal) => {
                     socket.send(JSON.stringify(signal));
                 });
@@ -69,6 +69,14 @@ const onMessage = (event: MessageEvent) => {
                         }
                     }
                 });
+
+                peer.on("stream", (stream) => {
+                    const video = document.querySelector("video");
+                    video.srcObject = stream;
+
+                    video.play();
+                });
+
                 peer.on("connect", () => {
                     console.log("CONNECTED");
                     button.addEventListener("click", () => {
@@ -88,7 +96,7 @@ const onMessage = (event: MessageEvent) => {
 };
 
 const connectToSocket = (socketUrl: string) => {
-    socket = new window.WebSocket(WS_URL);
+    socket = new window.WebSocket(WS_URI);
     socket.addEventListener("message", onMessage);
 
     socket.onopen = (event: Event) => {
@@ -98,4 +106,4 @@ const connectToSocket = (socketUrl: string) => {
 
 document.body.appendChild(component());
 
-connectToSocket(WS_URL);
+connectToSocket(WS_URI);
