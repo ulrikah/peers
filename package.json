@@ -3,8 +3,6 @@
     "version": "1.0.0",
     "scripts": {
         "server": "nodemon server.js",
-        "send": "nodemon --exec 'sleep 1 && node send.js'",
-        "receive": "nodemon --exec 'sleep 2 && node receive.js'",
         "watch": "webpack --watch",
         "start": "webpack-dev-server --open",
         "build": "webpack"
