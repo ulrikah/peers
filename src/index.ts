@@ -1,7 +1,7 @@
 import "./style.css";
 import Peer = require("simple-peer");
 
-const WS_URL = `ws://${location.hostname}:${location.port}`;
+const WS_URL = `wss://${location.hostname}:${location.port}`;
 // const WS_URL = `ws://${location.hostname}:1234`;
 
 let socket: WebSocket;
