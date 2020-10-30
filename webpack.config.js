@@ -25,11 +25,12 @@ module.exports = {
     },
     output: {
         filename: "app.bundle.js",
-        path: path.resolve(__dirname, "dist"),
+        path: path.resolve(__dirname, "dist/static/"),
     },
     devtool: "inline-source-map",
     devServer: {
-        contentBase: "./dist",
+        contentBase: "./dist/static",
+        port: 4321,
     },
     plugins: [
         new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),

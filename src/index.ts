@@ -1,7 +1,8 @@
 import "./style.css";
-import Peer from "simple-peer";
+import Peer = require("simple-peer");
 
-const WS_URL = "ws://localhost:1234";
+// const WS_URL = `ws://${location.hostname}:${location.port}`;
+const WS_URL = `ws://${location.hostname}:1234`;
 
 let socket: WebSocket;
 let peer: Peer.Instance;
@@ -79,6 +80,7 @@ const onMessage = (event: MessageEvent) => {
             })
             .catch((error) => {
                 console.log("Error fetching media stream");
+                console.error(error);
             });
     } else {
         peer.signal(JSON.parse(message));
