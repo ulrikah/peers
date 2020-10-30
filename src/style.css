@@ -19,3 +19,9 @@ p {
 button {
     display: block;
 }
+
+.mirrored-video {
+    transform: rotate(180deg);
+    -webkit-transform: rotate(180deg); /* Safari and Chrome */
+    -moz-transform: rotate(180deg); /* Firefox */
+}
