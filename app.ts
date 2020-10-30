@@ -3,7 +3,7 @@ import ws = require("ws");
 import publicIp = require("public-ip");
 import http = require("http");
 
-const PORT = process.env.port || 1234;
+const PORT = process.env.PORT || 1234;
 
 publicIp.v4().then((ip) => {
     console.log("Public IP adress", ip);
