@@ -17,5 +17,6 @@ jobs:
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: handshakers
+          heroku_email: ulrikhalmoy@gmail.com
           healthcheck: http://handshakers.herokuapp.com/
           branch: main
