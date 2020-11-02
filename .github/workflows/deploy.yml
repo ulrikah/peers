@@ -1,9 +1,8 @@
 name: Deploy
 
-on:
-  push:
+on: [push, pull_request]
     branches:
-      - master
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,4 +13,4 @@ jobs:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: handshakers
           healthcheck: http://handshakers.herokuapp.com/
-          branch: master
+          branch: main
