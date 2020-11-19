@@ -16,37 +16,61 @@ console.log("Attempting to get web socket server at", WS_URI);
 
 let socket: WebSocket;
 let peer: Peer.Instance;
-let video = document.createElement("video");
-video.controls = true;
-let logger = document.createElement("p");
 let button = document.createElement("button");
 button.innerText = "STREAM";
 const isInitiator = location.hash == "#sender";
 
-const component = () => {
+const renderUI = () => {
     const element = document.createElement("div");
     const heading = document.createElement("h1");
+    const video = document.createElement("video");
+    video.controls = true;
 
     heading.textContent = `${isInitiator ? "INITIATOR 🌀" : "RECEIVER 🐚"}`;
 
     element.appendChild(heading);
     element.appendChild(video);
     element.appendChild(button);
-    element.appendChild(logger);
 
-    return element;
+    document.body.appendChild(element);
+
+    const loggerContainer = document.createElement("div");
+    loggerContainer.className = "logger";
+    document.body.appendChild(loggerContainer);
+
+    return;
+};
+
+const log = (message: string) => {
+    const loggerContainer = document.querySelector(".logger");
+
+    const logEntry = document.createElement("div");
+    const timestamp = document.createElement("span");
+    timestamp.textContent = new Date().toTimeString().split(" ")[0];
+    timestamp.className = "timestamp";
+    logEntry.className = "logMessage";
+
+    const speechBubble = document.createElement("span");
+    speechBubble.innerText = "💬 ";
+    const logMsg = document.createElement("span");
+    logMsg.innerText = ` ${message}`;
+    logEntry.appendChild(speechBubble);
+    logEntry.appendChild(timestamp);
+    logEntry.appendChild(logMsg);
+
+    loggerContainer.appendChild(logEntry);
 };
 
 const onMessage = (event: MessageEvent) => {
     const message = event.data;
-    logger.textContent = message;
+    log(message);
     console.log("Received message", message);
     if (message.includes("ready")) {
         if (peer) return;
         peer = new Peer({
             initiator: message.includes("initiator") ? true : false,
         });
-        peer.on("signal", (signal) => {
+        peer.on("signal", (signal: Peer.SignalData) => {
             socket.send(JSON.stringify(signal));
         });
         peer.on("data", (msg) => {
@@ -110,6 +134,6 @@ const connectToSocket = (socketUrl: string) => {
     };
 };
 
-document.body.appendChild(component());
+renderUI();
 
 connectToSocket(WS_URI);

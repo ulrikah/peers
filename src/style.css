@@ -25,3 +25,20 @@ button {
     -webkit-transform: rotate(180deg); /* Safari and Chrome */
     -moz-transform: rotate(180deg); /* Firefox */
 }
+
+.logger {
+    overflow-x: scroll;
+    max-width: 80%;
+    background-color: darkseagreen;
+    border: 1px solid black;
+    padding: 1rem;
+}
+
+.logMessage {
+    white-space: pre;
+    font-family: monospace;
+}
+
+.timestamp {
+    font-weight: bold;
+}
