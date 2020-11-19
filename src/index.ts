@@ -23,12 +23,16 @@ const isInitiator = location.hash == "#sender";
 const renderUI = () => {
     const element = document.createElement("div");
     const heading = document.createElement("h1");
+    const username = document.createElement("h2");
     const video = document.createElement("video");
+
     video.controls = true;
 
     heading.textContent = `${isInitiator ? "INITIATOR 🌀" : "RECEIVER 🐚"}`;
+    username.textContent = "USER: "+Math.random().toString(16).substr(2, 4);
 
     element.appendChild(heading);
+    element.appendChild(username);
     element.appendChild(video);
     element.appendChild(button);
 
