@@ -19,7 +19,6 @@ const clients: ws[] = [];
 
 const socketServer = new ws.Server({ noServer: true });
 socketServer.on("connection", (client: ws) => {
-    client.on("message", (message) => console.log(message));
     clients.push(client);
     client.on("message", (msg) => {
         console.log("[server]", "received a message", "\n", msg);

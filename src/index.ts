@@ -16,21 +16,27 @@ console.log("Attempting to get web socket server at", WS_URI);
 
 let socket: WebSocket;
 let peer: Peer.Instance;
-let button = document.createElement("button");
-button.innerText = "STREAM";
-const isInitiator = location.hash == "#sender";
 
 const renderUI = () => {
+    const pingButton = document.createElement("button");
+    pingButton.className = "ping-button";
+    pingButton.innerText = "PING";
+
+    const destroyButton = document.createElement("button");
+    destroyButton.className = "destroy-button";
+    destroyButton.innerText = "Disconnect";
+
     const element = document.createElement("div");
     const heading = document.createElement("h1");
     const video = document.createElement("video");
     video.controls = true;
 
-    heading.textContent = `${isInitiator ? "INITIATOR 🌀" : "RECEIVER 🐚"}`;
+    heading.textContent = "🌀 RECEIVER 🐚";
 
     element.appendChild(heading);
     element.appendChild(video);
-    element.appendChild(button);
+    element.appendChild(pingButton);
+    element.appendChild(destroyButton);
 
     document.body.appendChild(element);
 
@@ -64,9 +70,7 @@ const log = (message: string) => {
 const onMessage = (event: MessageEvent) => {
     const message = event.data;
     log(message);
-    console.log("Received message", message);
     if (message.includes("ready")) {
-        if (peer) return;
         peer = new Peer({
             initiator: message.includes("initiator") ? true : false,
         });
@@ -76,15 +80,14 @@ const onMessage = (event: MessageEvent) => {
         peer.on("data", (msg) => {
             if (msg && msg.toString()) {
                 if (msg.toString().startsWith("[text]")) {
-                    console.log(msg.toString());
+                    log(msg.toString());
                 }
                 if (msg.toString().startsWith("[ping]")) {
                     peer.send("[pong]");
-                    console.log(msg.toString());
+                    log(msg.toString());
                 }
-                if (msg.toString().startsWith("[stream]")) {
-                    peer.send("[ping]");
-                    console.log(msg.toString());
+                if (msg.toString().startsWith("[pong]")) {
+                    log(msg.toString());
                 }
             }
         });
@@ -102,10 +105,24 @@ const onMessage = (event: MessageEvent) => {
         });
 
         peer.on("connect", () => {
-            button.addEventListener("click", () => {
-                peer.send("[stream]");
+            const destroyButton = document.querySelector(".destroy-button");
+            const pingButton = document.querySelector(".ping-button");
+
+            const ping = () => peer.send("[ping]");
+            pingButton.addEventListener("click", ping);
+
+            destroyButton.addEventListener("click", () => {
+                log("💀 Destroying peer connection");
+                peer.destroy();
+                pingButton.removeEventListener("click", ping);
             });
-            peer.send("[text] hi this is receiver");
+            // TO DO: replace 'peer' here with username
+            peer.send("[text] hi this is peer");
+        });
+
+        peer.on("close", () => {
+            log("Peer connection closed. Destroying connection 💀");
+            peer.destroy();
         });
         // get video/voice stream
         navigator.mediaDevices
@@ -130,7 +147,8 @@ const connectToSocket = (socketUrl: string) => {
     socket.addEventListener("message", onMessage);
 
     socket.onopen = (event: Event) => {
-        socket.send(`[ping] from ${isInitiator ? "INITIATOR" : "RECEIVER"}`);
+        // TO DO: replace 'peer' here with username
+        socket.send(`[ping] from peer`);
     };
 };
 
