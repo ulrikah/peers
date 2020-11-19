@@ -17,6 +17,8 @@ console.log("Attempting to get web socket server at", WS_URI);
 let socket: WebSocket;
 let peer: Peer.Instance;
 
+const userId = Math.random().toString(16).substr(2, 4);
+
 const renderUI = () => {
     const pingButton = document.createElement("button");
     pingButton.className = "ping-button";
@@ -26,23 +28,21 @@ const renderUI = () => {
     destroyButton.className = "destroy-button";
     destroyButton.innerText = "Disconnect";
 
-    const element = document.createElement("div");
+    const videoContainer = document.createElement("div");
+    videoContainer.className = "videoContainer";
     const heading = document.createElement("h1");
     const username = document.createElement("h2");
-    const video = document.createElement("video");
+    username.className = "username";
 
-    video.controls = true;
+    heading.textContent = "PEER 🐚";
+    username.textContent = "USER: " + userId;
 
-    heading.textContent = "🌀 RECEIVER 🐚";
-    username.textContent = "USER: " + Math.random().toString(16).substr(2, 4);
+    videoContainer.appendChild(heading);
+    videoContainer.appendChild(username);
+    videoContainer.appendChild(pingButton);
+    videoContainer.appendChild(destroyButton);
 
-    element.appendChild(heading);
-    element.appendChild(username);
-    element.appendChild(video);
-    element.appendChild(pingButton);
-    element.appendChild(destroyButton);
-
-    document.body.appendChild(element);
+    document.body.appendChild(videoContainer);
 
     const loggerContainer = document.createElement("div");
     loggerContainer.className = "logger";
@@ -96,9 +96,12 @@ const onMessage = (event: MessageEvent) => {
             }
         });
 
-        peer.on("stream", (stream) => {
-            console.log("Received stream");
-            const video = document.querySelector("video");
+        peer.on("stream", (stream: MediaStream) => {
+            log("🌀 Received stream");
+            const videoContainer = document.querySelector(".videoContainer");
+            const video = document.createElement("video");
+            video.controls = true;
+            videoContainer.appendChild(video);
 
             if (message.includes("initiator")) {
                 video.className = "mirrored-video";
@@ -120,14 +123,14 @@ const onMessage = (event: MessageEvent) => {
                 peer.destroy();
                 pingButton.removeEventListener("click", ping);
             });
-            // TO DO: replace 'peer' here with username
-            peer.send("[text] hi this is peer");
+            peer.send(`[text] hi this is peer ${userId}`);
         });
 
         peer.on("close", () => {
             log("Peer connection closed. Destroying connection 💀");
             peer.destroy();
         });
+
         // get video/voice stream
         navigator.mediaDevices
             .getUserMedia({
@@ -142,7 +145,9 @@ const onMessage = (event: MessageEvent) => {
                 console.error(error);
             });
     } else {
-        peer.signal(JSON.parse(message));
+        if (peer && peer.signal) {
+            peer.signal(JSON.parse(message));
+        }
     }
 };
 
@@ -151,8 +156,7 @@ const connectToSocket = (socketUrl: string) => {
     socket.addEventListener("message", onMessage);
 
     socket.onopen = (event: Event) => {
-        // TO DO: replace 'peer' here with username
-        socket.send(`[ping] from peer`);
+        socket.send(`[ping] from peer ${userId}`);
     };
 };
 
