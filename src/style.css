@@ -10,6 +10,13 @@ body {
 h1 {
     font-family: "VT323", monospace;
     font-size: 8rem;
+    margin: 0 auto;
+}
+
+h2 {
+    font-family: "VT323", monospace;
+    font-size: 2rem;
+    margin: 0 auto;
 }
 
 p {
