@@ -2,7 +2,9 @@
     "name": "peers",
     "version": "1.0.0",
     "scripts": {
-        "dev": "webpack-dev-server --open",
+        "dev-client": "webpack-dev-server --open",
+        "dev-server": "ts-node-dev --project server.tsconfig.json app.ts",
+        "dev": "concurrently \"npm run dev-client\" \"npm run dev-server\"",
         "build-client": "webpack",
         "build-server": "tsc --project server.tsconfig.json",
         "server": "npm run build-server && node ./dist/app.js",
@@ -32,10 +34,13 @@
         "nodemon": "^2.0.6",
         "style-loader": "^1.2.1",
         "ts-loader": "^8.0.2",
-        "ts-node-dev": "^1.0.0",
         "typescript": "^3.9.7",
         "webpack": "^4.44.1",
         "webpack-cli": "^3.3.12",
         "webpack-dev-server": "^3.11.0"
+    },
+    "devDependencies": {
+        "concurrently": "^5.3.0",
+        "ts-node-dev": "^1.0.0"
     }
 }

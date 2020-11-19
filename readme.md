@@ -1,5 +1,5 @@
 # Peers
 
-## Demo
+## Development
 
-You can open `./demo.html` in Google Chrome to see how the connection is supposed to work. The example creates two peers in the same browser, and plays back both audio streams. One of the streams is sent through a delay effect to differentiate the two streams.
+To set up for development, just run `npm run dev`. This will reload both the client and the server whenever a relevant file is edited and saved. Navigate to `localhost:4321` in two different tabs, and you will hopefully have set up a P2P connection to yourself. If you're successful, you should see a video stream from yourself. **Beware of audio feedback loops!**
