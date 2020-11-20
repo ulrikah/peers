@@ -2,6 +2,7 @@ import express = require("express");
 import ws = require("ws");
 import publicIp = require("public-ip");
 import http = require("http");
+
 import {
     uniqueNamesGenerator,
     adjectives,
@@ -18,7 +19,7 @@ const generateId = (): string =>
 const PORT = process.env.PORT || 1234;
 
 publicIp.v4().then((ip) => {
-    console.log("Public IP adress", ip);
+    console.log(`Public IP address: ${ip}`);
 });
 
 const app: express.Application = express()
@@ -66,35 +67,12 @@ socketServer.on("connection", (ws: ws) => {
             console.error("ERROR Failed parsing message from socket client");
             return;
         }
-        if (message.type == "webrtc-connection-attempt") {
-            console.log(
-                message.initiator ? "🌱" : "",
-                message.origin,
-                "wants to connect to",
-                message.target,
-                message.initiator ? "" : "🌱"
-            );
-        }
         if (message.type == "webrtc-connection-signal") {
-            console.log(
-                `[signal] forwarding signal from ${message.origin} to ${message.target}`
-            );
             const target = clients.find(
                 (client) => client.id == message.target
             );
             target.ws.send(JSON.stringify(message));
         }
-        // clients
-        //     .filter((client) => client !== socketClient)
-        //     .forEach((client) => {
-        //         client.ws.send(
-        //             JSON.stringify({
-        //                 type: "message",
-        //                 id: socketClient.id,
-        //                 msg: msg,
-        //             })
-        //         );
-        //     });
     });
 
     socketClient.ws.on("close", () => {

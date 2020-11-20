@@ -17,14 +17,6 @@ export default class Participant {
         this.connections = new Map<string, PeerConnection>();
     }
 
-    greeting = () => {
-        return JSON.stringify({
-            type: "greeting",
-            origin: this.id,
-            timestamp: new Date().getTime().toString(),
-        });
-    };
-
     connectToSocket = (socketUrl: string) => {
         const socket = new window.WebSocket(socketUrl);
         socket.addEventListener("message", this.onMessage);
@@ -56,6 +48,7 @@ export default class Participant {
             const target = message.target;
             const initiator = message.initiator;
             console.log(
+                origin,
                 "I'm ready to connect to",
                 target,
                 "as the",
@@ -72,17 +65,6 @@ export default class Participant {
                     connected: false,
                 });
             }
-
-            this.socket.send(
-                JSON.stringify({
-                    type: "webrtc-connection-attempt",
-                    origin: origin,
-                    target: target,
-                    initiator: initiator,
-                    timestamp: new Date().getTime().toString(),
-                })
-            );
-
             peer.on("signal", (signal: SignalData) => {
                 console.log(`📡 received signal from ${target}`);
                 this.socket.send(
@@ -111,17 +93,14 @@ export default class Participant {
 
                 if (peerMessage.type == "pong") {
                     /*
-                        in the case where an established connection is augmented,
-                        i.e. with an additional stream channel, then we don't want
-                        it to be treated as a new connection
+                        in the case where an established connection is extended with
+                        more signal data, i.e. with an additional stream channel, 
+                        then we don't want it to be treated as a new connection
                     */
                     if (this.connections.get(peerMessage.origin).connected)
                         return;
 
-                    // console.log(peerMessage.message);
-                    // console.log(
-                    //     `[connection] to ${peerMessage.origin} established`
-                    // );
+                    console.log(`[connected] to ${peerMessage.origin}`);
                     this.connections.get(peerMessage.origin).connected = true;
                     this.connections.get(peerMessage.origin).connectedAt =
                         peerMessage.timestamp;
@@ -177,6 +156,7 @@ export default class Participant {
                 const video = document.createElement("video");
                 video.controls = true;
                 video.srcObject = stream;
+                video.muted = true;
                 video.play();
                 document.body.appendChild(video);
             });
