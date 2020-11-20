@@ -1,23 +1,13 @@
 import "./style.css";
-import Peer = require("simple-peer");
+// import Peer from "simple-peer";
+import Participant from "./participant";
+import SOCKET_URL from "./socketUrl";
 
-let WS_URI: string;
-if (location.protocol === "https:") {
-    WS_URI = `wss://${location.hostname}:${location.port}`;
-} else {
-    WS_URI = `ws://${location.hostname}:${location.port}`;
-}
-
-// dev mode
-if (location.port === "4321") {
-    WS_URI = `ws://${location.hostname}:1234`;
-}
-console.log("Attempting to get web socket server at", WS_URI);
+console.log("Attempting to get web socket server at", SOCKET_URL);
 
 let socket: WebSocket;
-let peer: Peer.Instance;
-
-const userId = Math.random().toString(16).substr(2, 4);
+// let peer: Peer.Instance;
+let userId: string;
 
 const renderUI = () => {
     const pingButton = document.createElement("button");
@@ -35,7 +25,6 @@ const renderUI = () => {
     username.className = "username";
 
     heading.textContent = "PEER 🐚";
-    username.textContent = "USER: " + userId;
 
     videoContainer.appendChild(heading);
     videoContainer.appendChild(username);
@@ -71,95 +60,104 @@ const log = (message: string) => {
     loggerContainer.appendChild(logEntry);
 };
 
-const onMessage = (event: MessageEvent) => {
-    const message = event.data;
-    log(message);
-    if (message.includes("ready")) {
-        peer = new Peer({
-            initiator: message.includes("initiator") ? true : false,
-        });
-        peer.on("signal", (signal: Peer.SignalData) => {
-            socket.send(JSON.stringify(signal));
-        });
-        peer.on("data", (msg) => {
-            if (msg && msg.toString()) {
-                if (msg.toString().startsWith("[text]")) {
-                    log(msg.toString());
-                }
-                if (msg.toString().startsWith("[ping]")) {
-                    peer.send("[pong]");
-                    log(msg.toString());
-                }
-                if (msg.toString().startsWith("[pong]")) {
-                    log(msg.toString());
-                }
-            }
-        });
+// const onMessage = (event: MessageEvent) => {
+//     const message = event.data;
+//     log(message);
 
-        peer.on("stream", (stream: MediaStream) => {
-            log("🌀 Received stream");
-            const videoContainer = document.querySelector(".videoContainer");
-            const video = document.createElement("video");
-            video.controls = true;
-            videoContainer.appendChild(video);
+//     if (message.includes("[ID]")) {
+//         const id = message.split(" ")[1];
+//         console.log("Received ID", id);
+//         userId = id;
+//         document.querySelector(".username").textContent = id;
+//     }
 
-            if (message.includes("initiator")) {
-                video.className = "mirrored-video";
-            }
-            video.srcObject = stream;
+//     if (message.includes("ready")) {
+//         peer = new Peer({
+//             initiator: message.includes("initiator") ? true : false,
+//         });
+//         peer.on("signal", (signal: Peer.SignalData) => {
+//             socket.send(JSON.stringify(signal));
+//         });
+//         peer.on("data", (msg) => {
+//             if (msg && msg.toString()) {
+//                 if (msg.toString().startsWith("[text]")) {
+//                     log(msg.toString());
+//                 }
+//                 if (msg.toString().startsWith("[ping]")) {
+//                     peer.send("[pong]");
+//                     log(msg.toString());
+//                 }
+//                 if (msg.toString().startsWith("[pong]")) {
+//                     log(msg.toString());
+//                 }
+//             }
+//         });
 
-            video.play();
-        });
+//         peer.on("stream", (stream: MediaStream) => {
+//             log("🌀 Received stream");
+//             const videoContainer = document.querySelector(".videoContainer");
+//             const video = document.createElement("video");
+//             video.controls = true;
+//             videoContainer.appendChild(video);
 
-        peer.on("connect", () => {
-            const destroyButton = document.querySelector(".destroy-button");
-            const pingButton = document.querySelector(".ping-button");
+//             if (message.includes("initiator")) {
+//                 video.className = "mirrored-video";
+//             }
+//             video.srcObject = stream;
 
-            const ping = () => peer.send("[ping]");
-            pingButton.addEventListener("click", ping);
+//             video.play();
+//         });
 
-            destroyButton.addEventListener("click", () => {
-                log("💀 Destroying peer connection");
-                peer.destroy();
-                pingButton.removeEventListener("click", ping);
-            });
-            peer.send(`[text] hi this is peer ${userId}`);
-        });
+//         peer.on("connect", () => {
+//             const destroyButton = document.querySelector(".destroy-button");
+//             const pingButton = document.querySelector(".ping-button");
 
-        peer.on("close", () => {
-            log("Peer connection closed. Destroying connection 💀");
-            peer.destroy();
-        });
+//             const ping = () => peer.send("[ping]");
+//             pingButton.addEventListener("click", ping);
 
-        // get video/voice stream
-        navigator.mediaDevices
-            .getUserMedia({
-                video: true,
-                audio: true,
-            })
-            .then((stream: MediaStream) => {
-                peer.addStream(stream);
-            })
-            .catch((error) => {
-                console.log("Error fetching media stream");
-                console.error(error);
-            });
-    } else {
-        if (peer && peer.signal) {
-            peer.signal(JSON.parse(message));
-        }
-    }
-};
+//             destroyButton.addEventListener("click", () => {
+//                 log("💀 Destroying peer connection");
+//                 peer.destroy();
+//                 pingButton.removeEventListener("click", ping);
+//             });
+//             peer.send(`[text] hi this is peer ${userId}`);
+//         });
 
-const connectToSocket = (socketUrl: string) => {
-    socket = new window.WebSocket(socketUrl);
-    socket.addEventListener("message", onMessage);
+//         peer.on("close", () => {
+//             log("Peer connection closed. Destroying connection 💀");
+//             peer.destroy();
+//         });
 
-    socket.onopen = (event: Event) => {
-        socket.send(`[ping] from peer ${userId}`);
-    };
-};
+//         // get video/voice stream
+//         navigator.mediaDevices
+//             .getUserMedia({
+//                 video: true,
+//                 audio: true,
+//             })
+//             .then((stream: MediaStream) => {
+//                 peer.addStream(stream);
+//             })
+//             .catch((error) => {
+//                 console.log("Error fetching media stream");
+//                 console.error(error);
+//             });
+//     } else {
+//         if (peer && peer.signal) {
+//             peer.signal(JSON.parse(message));
+//         }
+//     }
+// };
+
+// const connectToSocket = (socketUrl: string) => {
+//     socket = new window.WebSocket(socketUrl);
+//     socket.addEventListener("message", onMessage);
+
+//     socket.onopen = (event: Event) => {
+//         socket.send(`[ping] from peer ${userId}`);
+//     };
+// };
 
 renderUI();
 
-connectToSocket(WS_URI);
+// connectToSocket(SOCKET_URL);
+const participant = new Participant(SOCKET_URL);
