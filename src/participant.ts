@@ -4,32 +4,27 @@ import Message from "../common/message";
 const log = debug("participant");
 
 interface PeerConnection {
-    origin: string;
-    target: string;
-    timestamp: Date;
+    peer: Peer.Instance;
+    connected: boolean;
+    connectedAt?: string;
 }
 
 export default class Participant {
     socket: WebSocket;
-    connections: PeerConnection[];
+    connections: Map<string, PeerConnection>;
     participantId: string;
-    peer: Peer.Instance;
     id: string;
     constructor(socketUrl: string) {
         this.socket = this.connectToSocket(socketUrl);
-        this.connections = [];
+        this.connections = new Map<string, PeerConnection>();
     }
 
     greeting = () => {
         return JSON.stringify({
             type: "greeting",
             origin: this.id,
-            timestamp: new Date(),
+            timestamp: new Date().getTime().toString(),
         });
-    };
-
-    connectToPeer = (targetId: string) => {
-        console.log("HELLO");
     };
 
     connectToSocket = (socketUrl: string) => {
@@ -39,7 +34,7 @@ export default class Participant {
     };
 
     onMessage = (event: MessageEvent) => {
-        const message = JSON.parse(event.data);
+        const message: Message = JSON.parse(event.data);
 
         if (message.type == "id") {
             console.log("Assigned ID", message.id);
@@ -48,7 +43,13 @@ export default class Participant {
 
         if (message.type == "webrtc-connection-signal") {
             try {
-                this.peer.signal(message.signal);
+                console.log("Oppfordring om å signalisere til", message.origin);
+                // if (this.connections.has(message.origin))
+                console.log(this.connections);
+                this.connections
+                    .get(message.origin)
+                    .peer.signal(message.signal);
+                // this.peer.signal(message.signal);
             } catch (error) {
                 console.error("ERROR message didn't contain signal", error);
                 console.error("Message", message);
@@ -66,7 +67,16 @@ export default class Participant {
                 initiator ? "initiator 🌱 " : "receiver 🍄"
             );
 
-            this.peer = new Peer({ initiator: initiator });
+            const peer = new Peer({ initiator: initiator });
+
+            // create new connection if there doesn't already exists one
+            if (!this.connections.has(target)) {
+                this.connections.set(target, {
+                    peer: peer,
+                    connectedAt: undefined,
+                    connected: false,
+                });
+            }
 
             this.socket.send(
                 JSON.stringify({
@@ -74,24 +84,20 @@ export default class Participant {
                     origin: origin,
                     target: target,
                     initiator: initiator,
-                    timestamp: new Date(),
+                    timestamp: new Date().getTime().toString(),
                 })
             );
 
-            this.peer.on("signal", (signal) => {
-                console.log("📡 received signal");
-                if (
-                    !this.connections.find(
-                        (connection) => connection.target == target
-                    )
-                ) {
+            peer.on("signal", (signal) => {
+                if (!this.connections.get(target).connected) {
+                    console.log(`📡 received signal from ${target}`);
                     this.socket.send(
                         JSON.stringify({
                             type: "webrtc-connection-signal",
                             origin: origin,
                             target: target,
                             signal: signal,
-                            timestamp: new Date(),
+                            timestamp: new Date().getTime().toString(),
                         })
                     );
                 } else {
@@ -99,29 +105,50 @@ export default class Participant {
                 }
             });
 
-            this.peer.on("data", (data: ArrayBuffer) => {
+            peer.on("data", (data: ArrayBuffer) => {
                 const peerMessage: Message = JSON.parse(data.toString());
-                if (
-                    peerMessage.type == "greeting" &&
-                    !this.connections.find(
-                        (connection) => connection.target == peerMessage.origin
-                    )
-                ) {
-                    this.connections.push({
-                        origin: this.id,
-                        target: peerMessage.origin,
-                        timestamp: peerMessage.timestamp,
-                    });
-                    console.log("New connection. List of connected peers:");
-                    this.peer.send(this.greeting());
-                    this.connections.map((connection) =>
-                        console.log("🤝", connection.target)
+                if (peerMessage.type == "ping") {
+                    peer.send(
+                        JSON.stringify({
+                            type: "pong",
+                            origin: this.id,
+                            message: `[pong] from ${this.id}`,
+                            timestamp: new Date().getTime().toString(),
+                        })
                     );
+                }
+
+                if (peerMessage.type == "pong") {
+                    console.log(peerMessage.message);
+                    console.log(
+                        `[connection] to ${peerMessage.origin} established`
+                    );
+                    console.log("New connection. List of connected peers:");
+                    this.connections.get(peerMessage.origin).connected = true;
+                    this.connections.get(peerMessage.origin).connectedAt =
+                        peerMessage.timestamp;
+
+                    for (let [
+                        targetId,
+                        connection,
+                    ] of this.connections.entries()) {
+                        if (connection.connected) {
+                            console.log("🤝", targetId, connection);
+                        }
+                    }
                 }
             });
 
-            this.peer.on("connect", (connection) => {
-                this.peer.send(this.greeting());
+            peer.on("connect", () => {
+                peer.send(
+                    JSON.stringify({
+                        type: "ping",
+                        origin: this.id,
+                        message: `[ping] from ${this.id}`,
+                        timestamp: new Date(),
+                    })
+                );
+                console.log("[ping] from", this.id, "(me)");
             });
         }
     };

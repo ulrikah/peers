@@ -47,7 +47,7 @@ socketServer.on("connection", (ws: ws) => {
     socketClient.ws.send(
         JSON.stringify({
             type: "id",
-            timestamp: new Date(),
+            timestamp: new Date().getTime().toString(),
             id: socketClient.id,
         })
     );
@@ -106,23 +106,26 @@ socketServer.on("connection", (ws: ws) => {
     console.log("[connect]", socketClient.id);
     logClientStatus();
 
-    // time to connect the peers :~)
-    // the initiator is always the first client in the list
+    /*  time to connect the peers :~)
+    
+        when client A wants to make a connection to client B,
+        the initiator is always the first client in the clients list
+    */
     if (clients.length >= 2) {
         clients.forEach((originClient) => {
-            const remoteClients = clients.filter(
+            const targetClients = clients.filter(
                 (client) => client !== originClient
             );
-            remoteClients.forEach((remoteClient) => {
+            targetClients.forEach((targetClient) => {
                 originClient.ws.send(
                     JSON.stringify({
                         type: "ready",
-                        timestamp: new Date(),
+                        timestamp: new Date().getTime().toString(),
                         id: originClient.id,
-                        target: remoteClient.id,
+                        target: targetClient.id,
                         initiator:
                             clients.indexOf(originClient) <
-                            clients.indexOf(remoteClient),
+                            clients.indexOf(targetClient),
                     })
                 );
             });
