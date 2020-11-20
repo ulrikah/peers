@@ -1,7 +1,5 @@
-import Peer, { SimplePeerData } from "simple-peer";
-import debug from "debug";
+import Peer, { SignalData } from "simple-peer";
 import Message from "../common/message";
-const log = debug("participant");
 
 interface PeerConnection {
     peer: Peer.Instance;
@@ -37,19 +35,16 @@ export default class Participant {
         const message: Message = JSON.parse(event.data);
 
         if (message.type == "id") {
+            // TO DO: put the ID somewhere in the GUI
             console.log("Assigned ID", message.id);
             this.id = message.id;
         }
 
         if (message.type == "webrtc-connection-signal") {
             try {
-                console.log("Oppfordring om å signalisere til", message.origin);
-                // if (this.connections.has(message.origin))
-                console.log(this.connections);
                 this.connections
                     .get(message.origin)
                     .peer.signal(message.signal);
-                // this.peer.signal(message.signal);
             } catch (error) {
                 console.error("ERROR message didn't contain signal", error);
                 console.error("Message", message);
@@ -88,21 +83,17 @@ export default class Participant {
                 })
             );
 
-            peer.on("signal", (signal) => {
-                if (!this.connections.get(target).connected) {
-                    console.log(`📡 received signal from ${target}`);
-                    this.socket.send(
-                        JSON.stringify({
-                            type: "webrtc-connection-signal",
-                            origin: origin,
-                            target: target,
-                            signal: signal,
-                            timestamp: new Date().getTime().toString(),
-                        })
-                    );
-                } else {
-                    console.log("Connection already exists");
-                }
+            peer.on("signal", (signal: SignalData) => {
+                console.log(`📡 received signal from ${target}`);
+                this.socket.send(
+                    JSON.stringify({
+                        type: "webrtc-connection-signal",
+                        origin: origin,
+                        target: target,
+                        signal: signal,
+                        timestamp: new Date().getTime().toString(),
+                    })
+                );
             });
 
             peer.on("data", (data: ArrayBuffer) => {
@@ -119,15 +110,23 @@ export default class Participant {
                 }
 
                 if (peerMessage.type == "pong") {
-                    console.log(peerMessage.message);
-                    console.log(
-                        `[connection] to ${peerMessage.origin} established`
-                    );
-                    console.log("New connection. List of connected peers:");
+                    /*
+                        in the case where an established connection is augmented,
+                        i.e. with an additional stream channel, then we don't want
+                        it to be treated as a new connection
+                    */
+                    if (this.connections.get(peerMessage.origin).connected)
+                        return;
+
+                    // console.log(peerMessage.message);
+                    // console.log(
+                    //     `[connection] to ${peerMessage.origin} established`
+                    // );
                     this.connections.get(peerMessage.origin).connected = true;
                     this.connections.get(peerMessage.origin).connectedAt =
                         peerMessage.timestamp;
 
+                    console.log("New connection. List of connected peers:");
                     for (let [
                         targetId,
                         connection,
@@ -136,6 +135,28 @@ export default class Participant {
                             console.log("🤝", targetId, connection);
                         }
                     }
+
+                    navigator.mediaDevices
+                        .getUserMedia({
+                            video: true,
+                            audio: true,
+                        })
+                        .then((stream: MediaStream) => {
+                            for (let [
+                                targetId,
+                                connection,
+                            ] of this.connections.entries()) {
+                                if (connection.connected) {
+                                    this.connections
+                                        .get(targetId)
+                                        .peer.addStream(stream);
+                                }
+                            }
+                        })
+                        .catch((error) => {
+                            console.log("Error fetching media stream");
+                            console.error(error);
+                        });
                 }
             });
 
@@ -149,6 +170,15 @@ export default class Participant {
                     })
                 );
                 console.log("[ping] from", this.id, "(me)");
+            });
+
+            peer.on("stream", (stream: MediaStream) => {
+                console.log("🌀 Received stream");
+                const video = document.createElement("video");
+                video.controls = true;
+                video.srcObject = stream;
+                video.play();
+                document.body.appendChild(video);
             });
         }
     };
