@@ -73,11 +73,37 @@ socketServer.on("connection", (ws: ws) => {
             );
             target.ws.send(JSON.stringify(message));
         }
+
+        if (message.type == "webrtc-connection-close") {
+            console.log(
+                "[close] forwarding from",
+                message.origin,
+                "to",
+                message.target
+            );
+            // JSON.stringify({
+            //     type: "webrtc-connection-close",
+            //     origin: this.id,
+            //     timestamp: new Date().getTime().toString(),
+            // })
+        }
     });
 
     socketClient.ws.on("close", () => {
-        clients.splice(clients.indexOf(socketClient), 1);
         console.log("[disconnect]", socketClient.id);
+        clients
+            .filter((client) => client.id !== socketClient.id)
+            .forEach((client) =>
+                client.ws.send(
+                    JSON.stringify({
+                        type: "close",
+                        timestamp: new Date().getTime().toString(),
+                        origin: client.id,
+                        target: socketClient.id,
+                    })
+                )
+            );
+        clients.splice(clients.indexOf(socketClient), 1);
         logClientStatus();
     });
 

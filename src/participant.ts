@@ -30,6 +30,7 @@ export default class Participant {
             // TO DO: put the ID somewhere in the GUI
             console.log("Assigned ID", message.id);
             this.id = message.id;
+            document.querySelector(".username").innerHTML = this.id;
         }
 
         if (message.type == "webrtc-connection-signal") {
@@ -47,6 +48,13 @@ export default class Participant {
             const origin = message.id;
             const target = message.target;
             const initiator = message.initiator;
+
+            if (this.connections.has(target)) {
+                console.log("Peer already has connection to target");
+                console.log("origin:", origin, "target:", target);
+                return;
+            }
+            // create new connection if there doesn't already exists one
             console.log(
                 origin,
                 "I'm ready to connect to",
@@ -54,17 +62,12 @@ export default class Participant {
                 "as the",
                 initiator ? "initiator 🌱 " : "receiver 🍄"
             );
-
             const peer = new Peer({ initiator: initiator });
-
-            // create new connection if there doesn't already exists one
-            if (!this.connections.has(target)) {
-                this.connections.set(target, {
-                    peer: peer,
-                    connectedAt: undefined,
-                    connected: false,
-                });
-            }
+            this.connections.set(target, {
+                peer: peer,
+                connectedAt: undefined,
+                connected: false,
+            });
             peer.on("signal", (signal: SignalData) => {
                 console.log(`📡 received signal from ${target}`);
                 this.socket.send(
@@ -121,16 +124,11 @@ export default class Participant {
                             audio: true,
                         })
                         .then((stream: MediaStream) => {
-                            for (let [
-                                targetId,
-                                connection,
-                            ] of this.connections.entries()) {
+                            this.connections.forEach((connection, id) => {
                                 if (connection.connected) {
-                                    this.connections
-                                        .get(targetId)
-                                        .peer.addStream(stream);
+                                    connection.peer.addStream(stream);
                                 }
-                            }
+                            });
                         })
                         .catch((error) => {
                             console.log("Error fetching media stream");
@@ -152,14 +150,36 @@ export default class Participant {
             });
 
             peer.on("stream", (stream: MediaStream) => {
-                console.log("🌀 Received stream");
-                const video = document.createElement("video");
-                video.controls = true;
-                video.srcObject = stream;
-                video.muted = true;
-                video.play();
-                document.body.appendChild(video);
+                console.log("🌀 Received stream from", target);
+                const existingStream = document.querySelector(`#${target}`);
+                if (!existingStream) {
+                    const videoWrapper = document.createElement("div");
+                    videoWrapper.id = target;
+                    const video = document.createElement("video");
+                    video.controls = true;
+                    video.srcObject = stream;
+                    video.muted = true;
+                    video.play();
+                    videoWrapper.appendChild(video);
+                    videoWrapper.appendChild(document.createTextNode(target));
+                    document.body.appendChild(videoWrapper);
+                }
             });
+        }
+
+        if (message.type == "close") {
+            console.log("Receiving closing message");
+            if (message.origin !== this.id) {
+                console.log("¯_(ツ)_/¯");
+            }
+            console.log("Destroying connection to", message.target);
+            this.connections.get(message.target).peer.destroy();
+            this.connections.delete(message.target);
+            console.log(
+                "Remaining connections",
+                Array.from(this.connections.keys())
+            );
+            document.querySelector(`#${message.target}`).remove();
         }
     };
 }
