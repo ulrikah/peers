@@ -31,6 +31,7 @@ export default class Participant {
             console.log("Assigned ID", message.id);
             this.id = message.id;
             document.querySelector(".username").innerHTML = this.id;
+            document.title = `Peers | ${this.id}`;
         }
 
         if (message.type == "webrtc-connection-signal") {
@@ -155,14 +156,19 @@ export default class Participant {
                 if (!existingStream) {
                     const videoWrapper = document.createElement("div");
                     videoWrapper.id = target;
+                    videoWrapper.className = "videoWrapper";
                     const video = document.createElement("video");
                     video.controls = true;
                     video.srcObject = stream;
                     video.muted = true;
                     video.play();
                     videoWrapper.appendChild(video);
-                    videoWrapper.appendChild(document.createTextNode(target));
-                    document.body.appendChild(videoWrapper);
+                    const p = document.createElement("p");
+                    p.innerText = target;
+                    videoWrapper.appendChild(p);
+                    document
+                        .querySelector(".videoContainer")
+                        .appendChild(videoWrapper);
                 }
             });
         }

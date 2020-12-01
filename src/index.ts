@@ -14,6 +14,9 @@ const renderUI = () => {
     destroyButton.className = "destroy-button";
     destroyButton.innerText = "Disconnect";
 
+    const loggerContainer = document.createElement("div");
+    loggerContainer.className = "logger";
+
     const videoContainer = document.createElement("div");
     videoContainer.className = "videoContainer";
     const heading = document.createElement("h1");
@@ -22,16 +25,12 @@ const renderUI = () => {
 
     heading.textContent = "PEER 🐚";
 
-    videoContainer.appendChild(heading);
-    videoContainer.appendChild(username);
-    videoContainer.appendChild(pingButton);
-    videoContainer.appendChild(destroyButton);
-
-    document.body.appendChild(videoContainer);
-
-    const loggerContainer = document.createElement("div");
-    loggerContainer.className = "logger";
+    document.body.appendChild(heading);
+    document.body.appendChild(username);
+    document.body.appendChild(pingButton);
+    document.body.appendChild(destroyButton);
     document.body.appendChild(loggerContainer);
+    document.body.appendChild(videoContainer);
 
     return;
 };

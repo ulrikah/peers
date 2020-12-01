@@ -27,12 +27,6 @@ button {
     display: block;
 }
 
-.mirrored-video {
-    transform: rotate(180deg);
-    -webkit-transform: rotate(180deg); /* Safari and Chrome */
-    -moz-transform: rotate(180deg); /* Firefox */
-}
-
 .logger {
     overflow-x: scroll;
     max-width: 80%;
@@ -48,4 +42,20 @@ button {
 
 .timestamp {
     font-weight: bold;
+}
+
+.videoContainer {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-column-gap: 10px;
+}
+
+.videoWrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.videoWrapper video {
+    max-width: 300px;
+    width: 100%;
 }
