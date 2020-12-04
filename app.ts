@@ -73,20 +73,6 @@ socketServer.on("connection", (ws: ws) => {
             );
             target.ws.send(JSON.stringify(message));
         }
-
-        if (message.type == "webrtc-connection-close") {
-            console.log(
-                "[close] forwarding from",
-                message.origin,
-                "to",
-                message.target
-            );
-            // JSON.stringify({
-            //     type: "webrtc-connection-close",
-            //     origin: this.id,
-            //     timestamp: new Date().getTime().toString(),
-            // })
-        }
     });
 
     socketClient.ws.on("close", () => {

@@ -1,22 +1,10 @@
 import "./style.css";
-// import Peer from "simple-peer";
 import Participant from "./participant";
 import SOCKET_URL from "./socketUrl";
 
 console.log("Attempting to get web socket server at", SOCKET_URL);
 
 const renderUI = () => {
-    const pingButton = document.createElement("button");
-    pingButton.className = "ping-button";
-    pingButton.innerText = "PING";
-
-    const destroyButton = document.createElement("button");
-    destroyButton.className = "destroy-button";
-    destroyButton.innerText = "Disconnect";
-
-    const loggerContainer = document.createElement("div");
-    loggerContainer.className = "logger";
-
     const videoContainer = document.createElement("div");
     videoContainer.className = "videoContainer";
     const heading = document.createElement("h1");
@@ -27,9 +15,6 @@ const renderUI = () => {
 
     document.body.appendChild(heading);
     document.body.appendChild(username);
-    document.body.appendChild(pingButton);
-    document.body.appendChild(destroyButton);
-    document.body.appendChild(loggerContainer);
     document.body.appendChild(videoContainer);
 
     return;

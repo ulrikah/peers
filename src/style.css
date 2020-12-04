@@ -4,44 +4,26 @@
 body {
     margin: 5%;
     padding: 0;
+    font-family: "VT323", monospace;
     background-color: #ebe7ff;
 }
 
 h1 {
-    font-family: "VT323", monospace;
     font-size: 8rem;
     margin: 0 auto;
 }
 
 h2 {
-    font-family: "VT323", monospace;
     font-size: 2rem;
     margin: 0 auto;
-}
-
-p {
-    font-family: "Open Sans", sans-serif;
 }
 
 button {
     display: block;
 }
 
-.logger {
-    overflow-x: scroll;
-    max-width: 80%;
-    background-color: darkseagreen;
-    border: 1px solid black;
-    padding: 1rem;
-}
-
-.logMessage {
-    white-space: pre;
-    font-family: monospace;
-}
-
-.timestamp {
-    font-weight: bold;
+.username {
+    margin: 1rem auto;
 }
 
 .videoContainer {
@@ -53,9 +35,16 @@ button {
 .videoWrapper {
     display: flex;
     flex-direction: column;
+    max-width: 300px;
+    border: 2px solid black;
+    border-radius: 5px;
 }
 
 .videoWrapper video {
-    max-width: 300px;
     width: 100%;
+    border-bottom: 2px solid black;
+}
+
+.videoWrapper p {
+    margin: 0.5rem auto;
 }

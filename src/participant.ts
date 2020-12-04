@@ -27,10 +27,9 @@ export default class Participant {
         const message: Message = JSON.parse(event.data);
 
         if (message.type == "id") {
-            // TO DO: put the ID somewhere in the GUI
             console.log("Assigned ID", message.id);
             this.id = message.id;
-            document.querySelector(".username").innerHTML = this.id;
+            document.querySelector(".username").innerHTML = `[${this.id}]`;
             document.title = `Peers | ${this.id}`;
         }
 
