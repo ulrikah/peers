@@ -29,13 +29,14 @@ button {
 .videoContainer {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-column-gap: 10px;
+    row-gap: 2rem;
+    column-gap: 1rem;
 }
 
 .videoWrapper {
     display: flex;
     flex-direction: column;
-    max-width: 300px;
+    max-width: 80%;
     border: 2px solid black;
     border-radius: 5px;
 }

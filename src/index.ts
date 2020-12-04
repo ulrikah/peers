@@ -20,26 +20,6 @@ const renderUI = () => {
     return;
 };
 
-const log = (message: string) => {
-    const loggerContainer = document.querySelector(".logger");
-
-    const logEntry = document.createElement("div");
-    const timestamp = document.createElement("span");
-    timestamp.textContent = new Date().toTimeString().split(" ")[0];
-    timestamp.className = "timestamp";
-    logEntry.className = "logMessage";
-
-    const speechBubble = document.createElement("span");
-    speechBubble.innerText = "💬 ";
-    const logMsg = document.createElement("span");
-    logMsg.innerText = ` ${message}`;
-    logEntry.appendChild(speechBubble);
-    logEntry.appendChild(timestamp);
-    logEntry.appendChild(logMsg);
-
-    loggerContainer.appendChild(logEntry);
-};
-
 renderUI();
 
 const participant = new Participant(SOCKET_URL);

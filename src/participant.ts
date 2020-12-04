@@ -15,12 +15,40 @@ export default class Participant {
     constructor(socketUrl: string) {
         this.socket = this.connectToSocket(socketUrl);
         this.connections = new Map<string, PeerConnection>();
+
+        navigator.mediaDevices
+            .getUserMedia({
+                video: true,
+            })
+            .then((stream: MediaStream) => {
+                this.renderStream(stream, this.id);
+            })
+            .catch((error) => {
+                console.log("Error fetching media stream");
+                console.error(error);
+            });
     }
 
     connectToSocket = (socketUrl: string) => {
         const socket = new window.WebSocket(socketUrl);
         socket.addEventListener("message", this.onMessage);
         return socket;
+    };
+
+    renderStream = (stream: MediaStream, name?: string) => {
+        const videoWrapper = document.createElement("div");
+        videoWrapper.id = name;
+        videoWrapper.className = "videoWrapper";
+        const video = document.createElement("video");
+        video.controls = true;
+        video.srcObject = stream;
+        video.muted = true;
+        video.play();
+        videoWrapper.appendChild(video);
+        const p = document.createElement("p");
+        p.innerText = name;
+        videoWrapper.appendChild(p);
+        document.querySelector(".videoContainer").appendChild(videoWrapper);
     };
 
     onMessage = (event: MessageEvent) => {
@@ -153,21 +181,7 @@ export default class Participant {
                 console.log("🌀 Received stream from", target);
                 const existingStream = document.querySelector(`#${target}`);
                 if (!existingStream) {
-                    const videoWrapper = document.createElement("div");
-                    videoWrapper.id = target;
-                    videoWrapper.className = "videoWrapper";
-                    const video = document.createElement("video");
-                    video.controls = true;
-                    video.srcObject = stream;
-                    video.muted = true;
-                    video.play();
-                    videoWrapper.appendChild(video);
-                    const p = document.createElement("p");
-                    p.innerText = target;
-                    videoWrapper.appendChild(p);
-                    document
-                        .querySelector(".videoContainer")
-                        .appendChild(videoWrapper);
+                    this.renderStream(stream, target);
                 }
             });
         }
